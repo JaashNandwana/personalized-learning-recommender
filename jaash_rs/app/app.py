@@ -3,6 +3,15 @@ Streamlit Web Application: Personalized Learning Content Recommendation System
 Using Hybrid Filtering and Bayesian Knowledge Tracing.
 """
 
+import os
+import sys
+from pathlib import Path
+
+# Ensure project root is in sys.path when running via Streamlit
+_project_root = str(Path(__file__).resolve().parent.parent.parent)
+if _project_root not in sys.path:
+    sys.path.insert(0, _project_root)
+
 import copy
 import pandas as pd
 import numpy as np

@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "jaash-rs"
+version = "0.1.0"
+description = "Personalized Learning Content Recommendation System Combining Hybrid Filtering and Bayesian Knowledge Tracing"
+authors = [
+    { name = "Jaash Nandwana" },
+    { name = "Ashmit Yadav" },
+    { name = "Anant Yadav" }
+]
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "streamlit>=1.35.0",
+    "numpy>=1.24.0",
+    "pandas>=2.0.0",
+    "scikit-learn>=1.3.0",
+    "pytest>=7.4.0",
+]
+
+[tool.setuptools.packages.find]
+include = ["jaash_rs*"]
