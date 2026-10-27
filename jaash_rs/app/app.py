@@ -1,7 +1,6 @@
 """
 Streamlit Web Application: Personalized Learning Content Recommendation System
 Using Hybrid Filtering and Bayesian Knowledge Tracing.
-Paper Authors: Jaash Nandwana, Ashmit Yadav, Anant Yadav (Manipal University Jaipur)
 """
 
 import copy
@@ -14,89 +13,103 @@ from jaash_rs.domain.curriculum import TOPICS, TOPIC_DICT, TOPIC_IDS, FORMATS, D
 from jaash_rs.domain.resources import CATALOG, CATALOG_BY_ID
 from jaash_rs.domain.question_bank import QUESTIONS_BY_TOPIC, QUESTIONS_BY_ID, QuizQuestion
 from jaash_rs.app.state import init_session_state, get_active_student, get_engine
-from jaash_rs.simulation.experiment_runner import PaperExperimentRunner
 from jaash_rs.profile.student_profile import StudentProfile
 
 # Page Configuration
 st.set_page_config(
-    page_title="Personalized Learning Recommender (BKT + Hybrid)",
+    page_title="Personalized Learning Recommender",
     page_icon="🎓",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
-# Custom Styling
+# Theme-Adaptive Modern Styling (Dark & Light Mode Compatible)
 st.markdown("""
 <style>
-    .main-header {
-        font-size: 2.2rem;
-        font-weight: 700;
-        color: #1E293B;
-        margin-bottom: 0.2rem;
+    /* Typography */
+    .main-title {
+        font-size: 2.15rem;
+        font-weight: 800;
+        letter-spacing: -0.025em;
+        margin-bottom: 0.25rem;
+        color: inherit;
     }
-    .sub-header {
+    .sub-title {
         font-size: 1.05rem;
-        color: #475569;
+        font-weight: 400;
+        opacity: 0.85;
         margin-bottom: 1.5rem;
+        line-height: 1.5;
     }
-    .paper-badge {
-        background-color: #EEF2FF;
-        color: #4338CA;
-        padding: 0.25rem 0.75rem;
-        border-radius: 9999px;
-        font-size: 0.85rem;
-        font-weight: 600;
-        display: inline-block;
-        margin-bottom: 0.5rem;
-        border: 1px solid #C7D2FE;
-    }
-    .metric-card {
-        background: #F8FAFC;
-        border: 1px solid #E2E8F0;
-        border-radius: 8px;
-        padding: 1rem;
-        text-align: center;
-    }
-    .shelf-header {
-        font-size: 1.35rem;
+    .shelf-title {
+        font-size: 1.3rem;
         font-weight: 700;
-        margin-top: 1.2rem;
-        margin-bottom: 0.8rem;
+        margin-top: 1.25rem;
+        margin-bottom: 0.35rem;
         display: flex;
         align-items: center;
         gap: 0.5rem;
+        color: inherit;
     }
+
+    /* Badges */
     .badge-format {
-        background-color: #E0E7FF;
-        color: #3730A3;
-        padding: 0.2rem 0.5rem;
-        border-radius: 4px;
-        font-size: 0.75rem;
+        background: rgba(99, 102, 241, 0.16);
+        color: #818CF8;
+        border: 1px solid rgba(99, 102, 241, 0.35);
+        padding: 0.2rem 0.6rem;
+        border-radius: 6px;
+        font-size: 0.78rem;
         font-weight: 600;
+        display: inline-block;
     }
     .badge-diff {
-        background-color: #FEF3C7;
-        color: #92400E;
-        padding: 0.2rem 0.5rem;
-        border-radius: 4px;
-        font-size: 0.75rem;
+        background: rgba(245, 158, 11, 0.16);
+        color: #FBBF24;
+        border: 1px solid rgba(245, 158, 11, 0.35);
+        padding: 0.2rem 0.6rem;
+        border-radius: 6px;
+        font-size: 0.78rem;
         font-weight: 600;
+        display: inline-block;
     }
     .badge-weak {
-        background-color: #FEE2E2;
-        color: #B91C1C;
-        padding: 0.2rem 0.5rem;
-        border-radius: 4px;
-        font-size: 0.75rem;
+        background: rgba(239, 68, 68, 0.16);
+        color: #F87171;
+        border: 1px solid rgba(239, 68, 68, 0.35);
+        padding: 0.2rem 0.6rem;
+        border-radius: 6px;
+        font-size: 0.78rem;
         font-weight: 600;
+        display: inline-block;
     }
+    .badge-score {
+        background: rgba(16, 185, 129, 0.16);
+        color: #34D399;
+        border: 1px solid rgba(16, 185, 129, 0.35);
+        padding: 0.2rem 0.6rem;
+        border-radius: 6px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        display: inline-block;
+    }
+
+    /* Remedial Highlight Box */
     .remedial-box {
-        background-color: #FEF2F2;
+        background: rgba(239, 68, 68, 0.10);
         border-left: 4px solid #EF4444;
         padding: 0.75rem 1rem;
-        border-radius: 0 6px 6px 0;
+        border-radius: 0 8px 8px 0;
         margin-bottom: 0.75rem;
-        font-size: 0.9rem;
+        font-size: 0.92rem;
+        line-height: 1.5;
+    }
+
+    /* Score Meta Pill */
+    .score-meta {
+        font-size: 0.82rem;
+        opacity: 0.85;
+        font-family: monospace;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -149,8 +162,7 @@ with st.sidebar.expander("➕ Onboard New Student Profile"):
             st.rerun()
 
 st.sidebar.markdown("---")
-st.sidebar.markdown("### ⚙️ Recommender Hyperparameters")
-st.sidebar.caption("Adjust institution scoring weights (sum to 1.0) and BKT parameters")
+st.sidebar.markdown("### ⚙️ Engine Parameters")
 
 # Sliders for weights
 alpha = st.sidebar.slider("α (Collaborative Filtering)", 0.0, 1.0, 0.40, 0.05)
@@ -183,17 +195,15 @@ if st.sidebar.button("🔄 Reset Current Student Interactions"):
 # -------------------------------------------------------------
 # MAIN HEADER
 # -------------------------------------------------------------
-st.markdown('<div class="paper-badge">IEEE Conference Research Implementation</div>', unsafe_allow_html=True)
-st.markdown('<div class="main-header">Personalized Learning Content Recommendation System</div>', unsafe_allow_html=True)
-st.markdown('<div class="sub-header">Combining Collaborative Filtering, Content-Based Matching, and Bayesian Knowledge Tracing with Targeted Remediation</div>', unsafe_allow_html=True)
+st.markdown('<div class="main-title">Personalized Learning Content Recommendation System</div>', unsafe_allow_html=True)
+st.markdown('<div class="sub-title">Adaptive learning platform combining Collaborative Filtering, Content-Based Matching, and Bayesian Knowledge Tracing with Targeted Remediation</div>', unsafe_allow_html=True)
 
-# Tabs
-tab1, tab2, tab3, tab4, tab5 = st.tabs([
+# Tabs (Clean 4-tab interface, benchmark tab removed per user request)
+tab1, tab2, tab3, tab4 = st.tabs([
     "🎯 Student Dashboard",
     "📝 Interactive Practice & Knowledge Tracing",
     "🔍 Scoring Engine Inspector",
-    "📊 Paper Simulation & Benchmarks",
-    "📚 Curriculum Catalog",
+    "📚 Learning Resources",
 ])
 
 engine = get_engine(alpha, beta, gamma, theta, delta)
@@ -204,7 +214,7 @@ engine = get_engine(alpha, beta, gamma, theta, delta)
 with tab1:
     col_dash1, col_dash2 = st.columns([1, 1])
 
-    # Left: Student Profile & Weakness Radar/Bar Chart
+    # Left: Student Profile & Weakness Chart
     with col_dash1:
         st.subheader("📊 Estimated Knowledge State (BKT)")
         weak_profile = st.session_state.bkt.get_weakness_profile(student)
@@ -222,10 +232,10 @@ with tab1:
         df_chart = pd.DataFrame(chart_data)
 
         # Display bar chart with threshold
-        st.bar_chart(df_chart.set_index("Topic")["Mastery P(Lt)"], color="#4F46E5")
+        st.bar_chart(df_chart.set_index("Topic")["Mastery P(Lt)"], color="#6366F1")
         st.caption(f"Horizontal reference line: Weakness threshold **θ = {theta:.2f}**. Topics below θ with ≥{DEFAULT_CONFIG.min_answers_n_min} answers are flagged for remediation.")
 
-    # Right: Summary Badges
+    # Right: Summary Metrics
     with col_dash2:
         st.subheader("💡 Student Learning Status")
         weak_topics = [TOPIC_DICT[t].name for t, info in weak_profile.items() if info["is_weak"]]
@@ -242,7 +252,7 @@ with tab1:
         else:
             st.success("No critical weaknesses detected! All tested topics meet the mastery threshold.")
 
-        st.info("💡 **Dual-Shelf Philosophy:** Rather than silently burying remedial material into standard recommendations (where students avoid them), the system explicitly separates them into **'Strengthen your basics'** with clear rationales.")
+        st.info("💡 **Dual-Shelf Philosophy:** Instead of burying remedial material into standard recommendations (where students naturally avoid them), the system explicitly separates them into **'Strengthen your basics'** with clear rationales.")
 
     st.markdown("---")
 
@@ -250,16 +260,16 @@ with tab1:
     rec_for_you, strengthen_basics = engine.recommend(student, k=top_k, weights=(alpha, beta, gamma))
 
     # Shelf 1: "Recommended for you"
-    st.markdown(f'<div class="shelf-header">🌟 Recommended For You (Top {top_k})</div>', unsafe_allow_html=True)
-    st.caption("Ranked by overall hybrid score mixing your format preferences, peer engagement habits, and mastery needs.")
+    st.markdown(f'<div class="shelf-title">🌟 Recommended For You (Top {top_k})</div>', unsafe_allow_html=True)
+    st.caption("Ranked by overall hybrid score matching your format preferences, peer engagement patterns, and mastery needs.")
 
     if not rec_for_you:
         st.write("No recommendations available.")
     else:
         for idx, item in enumerate(rec_for_you, start=1):
             res = item.resource
-            with st.container():
-                st.markdown(f"#### {idx}. {res.title}")
+            with st.container(border=True):
+                st.markdown(f"### {idx}. {res.title}")
                 st.markdown(f"{res.description}")
                 col_tags, col_btns = st.columns([3, 1])
 
@@ -267,9 +277,9 @@ with tab1:
                     tags_html = (
                         f'<span class="badge-format">Format: {res.format.title()}</span> '
                         f'<span class="badge-diff">Difficulty: {res.difficulty.title()}</span> '
-                        f'<span>⏱️ {res.estimated_minutes} mins</span> | '
-                        f'<span><b>Hybrid Score:</b> {item.hybrid_score:.3f} '
-                        f'(SCF: {item.scf_score:.2f}, SCB: {item.scb_score:.2f}, SW: {item.sw_score:.2f}, Decay: {item.decay_factor:.2f})</span>'
+                        f'<span class="badge-score">Hybrid Score: {item.hybrid_score:.3f}</span> | '
+                        f'<span>⏱️ {res.estimated_minutes} mins</span> '
+                        f'<span class="score-meta">(SCF: {item.scf_score:.2f}, SCB: {item.scb_score:.2f}, SW: {item.sw_score:.2f}, Decay: {item.decay_factor:.2f})</span>'
                     )
                     st.markdown(tags_html, unsafe_allow_html=True)
                     if item.reason:
@@ -282,19 +292,17 @@ with tab1:
                         st.success(f"Completed '{res.title}'! Profile updated.")
                         st.rerun()
 
-                st.markdown("<hr style='margin: 0.5rem 0;'>", unsafe_allow_html=True)
-
     # Shelf 2: "Strengthen your basics"
-    st.markdown(f'<div class="shelf-header">🛠️ Strengthen Your Basics (Remediation Shelf)</div>', unsafe_allow_html=True)
-    st.caption("Resources mapped directly to your detected weak topics with transparent pedagogical feedback.")
+    st.markdown(f'<div class="shelf-title">🛠️ Strengthen Your Basics (Remediation Shelf)</div>', unsafe_allow_html=True)
+    st.caption("Resources mapped directly to your detected weak topics with transparent pedagogical explanations.")
 
     if not strengthen_basics:
         st.success("🎉 You currently have no flagged weak topics! Excellent work.")
     else:
         for idx, item in enumerate(strengthen_basics, start=1):
             res = item.resource
-            with st.container():
-                st.markdown(f"#### {idx}. {res.title}")
+            with st.container(border=True):
+                st.markdown(f"### {idx}. {res.title}")
                 st.markdown(f'<div class="remedial-box">🎯 <b>Why recommended:</b> {item.reason}</div>', unsafe_allow_html=True)
                 st.markdown(f"{res.description}")
 
@@ -319,8 +327,6 @@ with tab1:
                             student.record_quiz_answer(item.weak_topic_trigger, f"prac_{res.resource_id}_2", True)
                         st.success(f"Completed '{res.title}'! Knowledge tracing mastery improved.")
                         st.rerun()
-
-                st.markdown("<hr style='margin: 0.5rem 0;'>", unsafe_allow_html=True)
 
 # =============================================================
 # TAB 2: INTERACTIVE PRACTICE QUIZ & REAL-TIME BKT
@@ -462,76 +468,12 @@ with tab3:
         })
 
     df_scores = pd.DataFrame(rows).sort_values(by="Final Score S(u,i)", ascending=False)
-    st.dataframe(df_scores, use_container_width=True)
+    st.dataframe(df_scores, width='stretch')
 
 # =============================================================
-# TAB 4: PAPER SIMULATION & BENCHMARKS
+# TAB 4: LEARNING RESOURCES CATALOG
 # =============================================================
 with tab4:
-    st.subheader("📊 Replication of Controlled Simulation Study (Section V)")
-    st.markdown("""
-    This section reproduces the experimental results from the research paper:
-    - **Table I:** Knowledge Tracing and Weakness Detection Metrics
-    - **Table II:** Recommendation Performance at K = 10
-    - **Figure 4 & 5:** Dynamic mastery updates & remediation weight sensitivity curve
-    """)
-
-    col_btn, col_info = st.columns([1, 2])
-    with col_btn:
-        run_bench = st.button("🚀 Run Simulation Benchmark (400 Students)", type="primary")
-
-    if run_bench:
-        with st.spinner("Running 400-student controlled simulation benchmark..."):
-            runner = PaperExperimentRunner(cohort=st.session_state.cohort, config=st.session_state.config)
-            st.session_state.table1_results = runner.run_table1_kt_evaluation()
-            st.session_state.table2_results = runner.run_table2_benchmark(k=10)
-            st.session_state.sensitivity_results = runner.run_sensitivity_sweep()
-            st.session_state.benchmarks_run = True
-            st.success("Simulation finished successfully!")
-
-    if st.session_state.benchmarks_run:
-        col_t1, col_t2 = st.columns(2)
-
-        with col_t1:
-            st.markdown("### 📋 Table I: Knowledge Tracing Results")
-            t1 = st.session_state.table1_results
-            df_t1 = pd.DataFrame([
-                {"Measure": "Next answer AUC, BKT", "Value": f"{t1['bkt_auc']:.3f}"},
-                {"Measure": "Next answer AUC, running average baseline", "Value": f"{t1['running_avg_baseline_auc']:.3f}"},
-                {"Measure": "Weak topic detection precision", "Value": f"{t1['weak_detection_precision']:.3f}"},
-                {"Measure": "Weak topic detection recall", "Value": f"{t1['weak_detection_recall']:.3f}"},
-                {"Measure": "Weak topic detection F1", "Value": f"{t1['weak_detection_f1']:.3f}"},
-            ])
-            st.table(df_t1)
-
-        with col_t2:
-            st.markdown("### 📋 Table II: Recommendation Results at K = 10")
-            t2 = st.session_state.table2_results
-            df_t2 = pd.DataFrame(t2)
-            st.table(df_t2.style.format({
-                "P@10": "{:.3f}",
-                "NDCG@10": "{:.3f}",
-                "Cov@10": "{:.3f}",
-                "Gain": lambda g: f"{g:.3f}" if g is not None else "n/a"
-            }))
-
-        st.markdown("---")
-        st.markdown("### 📈 Figure 5: Sensitivity to Remediation Weight γ")
-        sens_data = st.session_state.sensitivity_results
-        df_sens = pd.DataFrame(sens_data)
-
-        # Plot sensitivity
-        st.line_chart(
-            df_sens.set_index("gamma")[["coverage_at_10", "learning_gain", "precision_at_10"]]
-        )
-        st.caption("Coverage climbs rapidly with small γ (0.1 - 0.2), achieving over 90% weak topic coverage with minimal precision tradeoff.")
-    else:
-        st.info("Click 'Run Simulation Benchmark' above to execute the empirical study across 400 simulated students.")
-
-# =============================================================
-# TAB 5: CURRICULUM CATALOG
-# =============================================================
-with tab5:
     st.subheader("📚 Educational Resource Catalog (300 Items)")
     col_f1, col_f2, col_f3 = st.columns(3)
     with col_f1:
@@ -551,4 +493,4 @@ with tab5:
 
     st.write(f"Showing **{len(filtered)}** of {len(CATALOG)} resources")
     df_cat = pd.DataFrame([r.to_dict() for r in filtered])
-    st.dataframe(df_cat, use_container_width=True)
+    st.dataframe(df_cat, width='stretch')
