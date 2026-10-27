@@ -202,8 +202,8 @@ class PaperExperimentRunner:
         configs = [
             ("Popularity", None),
             ("CF only", (1.0, 0.0, 0.0)),
-            ("CF + CB (γ = 0)", (0.57, 0.43, 0.0)),
-            ("Full hybrid (γ = 0.3)", (0.40, 0.30, 0.30)),
+            ("CF + CB (gamma = 0)", (0.57, 0.43, 0.0)),
+            ("Full hybrid (gamma = 0.3)", (0.40, 0.30, 0.30)),
         ]
 
         results = []
