@@ -1,0 +1,21 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "web",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--", "--port", "5174", "--strictPort"],
+      "cwd": "nineone-platform/web",
+      "port": 5174
+    },
+    {
+      "name": "rf-trace-analyzer",
+      "runtimeExecutable": "/bin/bash",
+      "runtimeArgs": [
+        "-c",
+        "cd '/Users/vermaryan1/Desktop/Ninebar.ai/RF-Trace-Analyzer' && export PATH=/opt/homebrew/bin:$PATH PORT=8765 BROWSER=echo && exec .venv/bin/python app/launcher.py"
+      ],
+      "port": 8765
+    }
+  ]
+}
